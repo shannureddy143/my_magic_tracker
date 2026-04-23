@@ -1,0 +1,1418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Daily Magic Tracker</title>
+  <style>
+    :root {
+      --bg1: #fff7fb;
+      --bg2: #f5f7ff;
+      --card: rgba(255,255,255,0.78);
+      --text: #2d2a3a;
+      --muted: #6d6883;
+      --primary: #8b5cf6;
+      --primary-2: #ec4899;
+      --accent: #22c55e;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --shadow: 0 10px 30px rgba(139, 92, 246, 0.16);
+      --radius: 24px;
+      --border: rgba(255,255,255,0.55);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(236,72,153,0.18), transparent 28%),
+        radial-gradient(circle at top right, rgba(34,197,94,0.12), transparent 25%),
+        linear-gradient(135deg, var(--bg1), var(--bg2));
+      min-height: 100vh;
+    }
+
+    .floating {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 0;
+    }
+
+    .bubble {
+      position: absolute;
+      border-radius: 50%;
+      opacity: 0.18;
+      animation: floatUp 12s linear infinite;
+      filter: blur(1px);
+    }
+
+    @keyframes floatUp {
+      0% { transform: translateY(20px) scale(0.9); opacity: 0; }
+      20% { opacity: 0.18; }
+      100% { transform: translateY(-120vh) scale(1.2); opacity: 0; }
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 1450px;
+      margin: 0 auto;
+      padding: 22px;
+    }
+
+    .hero {
+      background: linear-gradient(135deg, rgba(139,92,246,0.88), rgba(236,72,153,0.82));
+      color: white;
+      border-radius: 30px;
+      padding: 26px;
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      right: -40px;
+      top: -40px;
+      width: 180px;
+      height: 180px;
+      background: rgba(255,255,255,0.15);
+      border-radius: 50%;
+    }
+
+    .hero h1 {
+      margin: 0 0 8px;
+      font-size: clamp(1.6rem, 3vw, 2.5rem);
+    }
+
+    .hero p {
+      margin: 0;
+      font-size: 1rem;
+      opacity: 0.95;
+      max-width: 800px;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr;
+      gap: 18px;
+      align-items: center;
+      margin-top: 18px;
+    }
+
+    .motivation {
+      background: rgba(255,255,255,0.16);
+      border: 1px solid rgba(255,255,255,0.2);
+      backdrop-filter: blur(8px);
+      padding: 18px;
+      border-radius: 20px;
+    }
+
+    .motivation small {
+      display: block;
+      opacity: 0.85;
+      margin-bottom: 6px;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 16px;
+    }
+
+    button, .pill, input, textarea, select {
+      font: inherit;
+    }
+
+    .btn {
+      border: none;
+      padding: 12px 18px;
+      border-radius: 14px;
+      cursor: pointer;
+      transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease;
+    }
+
+    .btn:hover { transform: translateY(-2px); }
+    .btn:active { transform: scale(0.98); }
+
+    .btn-primary {
+      background: white;
+      color: var(--primary);
+      font-weight: 700;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.1);
+    }
+
+    .btn-soft {
+      background: rgba(255,255,255,0.16);
+      color: white;
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 340px 1fr;
+      gap: 18px;
+      margin-top: 18px;
+      align-items: start;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      backdrop-filter: blur(14px);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 18px;
+    }
+
+    .card h2, .card h3 {
+      margin: 0 0 12px;
+    }
+
+    .muted { color: var(--muted); }
+
+    .top-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+
+    .selected-date {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--primary);
+      background: rgba(139,92,246,0.1);
+      padding: 8px 12px;
+      border-radius: 999px;
+    }
+
+    .calendar-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .calendar-header button {
+      background: rgba(139,92,246,0.12);
+      color: var(--primary);
+      border: none;
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 1.1rem;
+      font-weight: bold;
+    }
+
+    .month-label {
+      font-weight: 700;
+      font-size: 1rem;
+    }
+
+    .weekday-row, .days-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 8px;
+    }
+
+    .weekday {
+      text-align: center;
+      font-size: 0.78rem;
+      color: var(--muted);
+      font-weight: 600;
+      padding: 4px 0;
+    }
+
+    .day {
+      aspect-ratio: 1;
+      border: none;
+      border-radius: 16px;
+      background: rgba(255,255,255,0.85);
+      cursor: pointer;
+      position: relative;
+      font-weight: 700;
+      color: var(--text);
+      transition: transform 0.16s ease, background 0.16s ease, box-shadow 0.16s ease;
+    }
+
+    .day:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 16px rgba(139,92,246,0.12);
+    }
+
+    .day.inactive {
+      opacity: 0.35;
+    }
+
+    .day.selected {
+      background: linear-gradient(135deg, var(--primary), var(--primary-2));
+      color: white;
+    }
+
+    .day.today {
+      outline: 2px dashed rgba(139,92,246,0.45);
+      outline-offset: 2px;
+    }
+
+    .day.has-data::after {
+      content: "";
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--accent);
+      position: absolute;
+      bottom: 7px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+
+    .stat {
+      padding: 18px;
+      border-radius: 22px;
+      color: white;
+      min-height: 120px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stat:nth-child(1) { background: linear-gradient(135deg, #7c3aed, #a855f7); }
+    .stat:nth-child(2) { background: linear-gradient(135deg, #ec4899, #f97316); }
+    .stat:nth-child(3) { background: linear-gradient(135deg, #06b6d4, #3b82f6); }
+    .stat:nth-child(4) { background: linear-gradient(135deg, #22c55e, #14b8a6); }
+
+    .stat small {
+      opacity: 0.9;
+      display: block;
+      margin-bottom: 8px;
+    }
+
+    .stat .value {
+      font-size: 1.7rem;
+      font-weight: 800;
+    }
+
+    .main-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+
+    .section-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .tiny-badge {
+      font-size: 0.8rem;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(139,92,246,0.1);
+      color: var(--primary);
+      font-weight: 700;
+    }
+
+    .check-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .item-row {
+      display: grid;
+      grid-template-columns: auto 100px 1fr auto;
+      gap: 10px;
+      align-items: center;
+      background: rgba(255,255,255,0.78);
+      padding: 12px;
+      border-radius: 16px;
+      border: 1px solid rgba(139,92,246,0.08);
+    }
+
+    .item-row input[type="text"] {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(109,104,131,0.2);
+      background: white;
+      outline: none;
+    }
+
+    .item-row input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      accent-color: var(--primary);
+      cursor: pointer;
+    }
+
+    .icon-btn {
+      border: none;
+      background: rgba(239,68,68,0.12);
+      color: var(--danger);
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: 700;
+    }
+
+    .add-btn {
+      width: 100%;
+      margin-top: 12px;
+      background: linear-gradient(135deg, rgba(139,92,246,0.15), rgba(236,72,153,0.12));
+      color: var(--primary);
+      font-weight: 700;
+      border: 1px dashed rgba(139,92,246,0.28);
+      padding: 12px;
+      border-radius: 14px;
+      cursor: pointer;
+    }
+
+    .habit-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .habit-box {
+      background: rgba(255,255,255,0.8);
+      padding: 14px;
+      border-radius: 18px;
+      border: 1px solid rgba(139,92,246,0.08);
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      min-height: 72px;
+    }
+
+    .habit-box input[type="checkbox"] {
+      width: 22px;
+      height: 22px;
+      accent-color: var(--accent);
+    }
+
+    .score-line {
+      margin-top: 14px;
+      background: rgba(139,92,246,0.08);
+      border-radius: 18px;
+      padding: 12px;
+      font-weight: 700;
+      color: var(--primary);
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .mood-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+    }
+
+    .mood-btn {
+      background: rgba(255,255,255,0.82);
+      border: 1px solid rgba(139,92,246,0.08);
+      border-radius: 18px;
+      padding: 12px 6px;
+      cursor: pointer;
+      text-align: center;
+      transition: transform 0.15s ease, border-color 0.15s ease;
+    }
+
+    .mood-btn:hover {
+      transform: translateY(-2px);
+    }
+
+    .mood-btn.selected {
+      border-color: var(--primary);
+      background: rgba(139,92,246,0.12);
+      box-shadow: 0 8px 16px rgba(139,92,246,0.12);
+    }
+
+    .mood-btn .emoji {
+      font-size: 1.6rem;
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 145px;
+      resize: vertical;
+      padding: 14px;
+      border-radius: 18px;
+      border: 1px solid rgba(109,104,131,0.2);
+      outline: none;
+      background: rgba(255,255,255,0.92);
+      line-height: 1.5;
+    }
+
+    .footer-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+      margin-top: 18px;
+    }
+
+    .btn-save {
+      background: linear-gradient(135deg, var(--primary), var(--primary-2));
+      color: white;
+      font-weight: 700;
+    }
+
+    .btn-ghost {
+      background: rgba(139,92,246,0.1);
+      color: var(--primary);
+      font-weight: 700;
+    }
+
+    .toast {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      background: rgba(45,42,58,0.94);
+      color: white;
+      padding: 12px 16px;
+      border-radius: 14px;
+      box-shadow: 0 10px 24px rgba(0,0,0,0.18);
+      opacity: 0;
+      transform: translateY(20px);
+      pointer-events: none;
+      transition: all 0.25s ease;
+      z-index: 20;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .progress-bar {
+      height: 11px;
+      background: rgba(109,104,131,0.12);
+      border-radius: 999px;
+      overflow: hidden;
+      margin-top: 10px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0;
+      background: linear-gradient(90deg, var(--primary), var(--primary-2), var(--accent));
+      border-radius: 999px;
+      transition: width 0.25s ease;
+    }
+
+    .mini-note {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-top: 8px;
+      line-height: 1.45;
+    }
+
+    .sidebar-column {
+      display: grid;
+      gap: 16px;
+      align-self: start;
+    }
+
+    .side-panel {
+      padding: 18px;
+    }
+
+    .calendar-panel {
+      background: linear-gradient(180deg, rgba(255,255,255,0.9), rgba(249,245,255,0.95));
+    }
+
+    .water-panel {
+      background: linear-gradient(180deg, rgba(239,246,255,0.96), rgba(219,234,254,0.88));
+      border: 1px solid rgba(59,130,246,0.14);
+    }
+
+    .care-panel {
+      background: linear-gradient(180deg, rgba(255,250,245,0.96), rgba(254,242,248,0.9));
+      border: 1px solid rgba(236,72,153,0.12);
+    }
+
+    .focus-panel {
+      background: linear-gradient(180deg, rgba(250,245,255,0.96), rgba(243,232,255,0.9));
+      border: 1px solid rgba(139,92,246,0.12);
+    }
+
+    .mini-stat-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(109,104,131,0.1);
+      font-size: 0.92rem;
+    }
+
+    .mini-stat-row:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .spark {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 56px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(139,92,246,0.1);
+      color: var(--primary);
+      font-weight: 800;
+      font-size: 0.84rem;
+    }
+
+    .focus-box {
+      background: linear-gradient(135deg, rgba(139,92,246,0.1), rgba(236,72,153,0.08));
+      border-radius: 16px;
+      padding: 12px;
+      color: var(--text);
+      font-size: 0.92rem;
+      line-height: 1.5;
+    }
+
+    .water-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .water-cup {
+      border: none;
+      border-radius: 14px;
+      padding: 10px 0;
+      background: rgba(59,130,246,0.08);
+      color: #2563eb;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.15s ease, background 0.15s ease;
+    }
+
+    .water-cup.active {
+      background: linear-gradient(135deg, #60a5fa, #3b82f6);
+      color: white;
+    }
+
+    .care-list {
+      display: grid;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .care-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(255,255,255,0.85);
+      border: 1px solid rgba(139,92,246,0.08);
+      border-radius: 16px;
+      padding: 10px 12px;
+    }
+
+    .care-item input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      accent-color: var(--primary);
+    }
+
+    @media (max-width: 1100px) {
+      .layout,
+      .hero-grid,
+      .main-grid,
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .habit-grid,
+      .mood-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .item-row {
+        grid-template-columns: auto 1fr;
+      }
+
+      .item-row .time-wrap,
+      .item-row .remove-wrap {
+        grid-column: span 2;
+      }
+
+      .container {
+        padding: 14px;
+      }
+
+      .hero,
+      .card {
+        border-radius: 22px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="floating" id="floating"></div>
+
+  <div class="container">
+    <section class="hero">
+      <h1>My Daily Magic Tracker ✨</h1>
+      <p>
+        Study tracker, food tracker, mood tracker, diary, tomorrow plan, performance score, and date-wise save — all in one beautiful website.
+      </p>
+      <div class="hero-grid">
+        <div class="motivation">
+          <small>Today's motivation</small>
+          <strong id="motivationText">Small steps every day create a big change in your life.</strong>
+          <div class="hero-actions">
+            <button class="btn btn-primary" id="todayBtn">Open Today</button>
+            <button class="btn btn-soft" id="quoteBtn">New Motivation</button>
+          </div>
+        </div>
+        <div class="motivation">
+          <small>Your current day</small>
+          <div class="selected-date" id="selectedDateLabel">--</div>
+          <div class="mini-note">Date click chesthe aa roju details open avuthayi. Data mee browser lone safe ga store avuthundi.</div>
+        </div>
+      </div>
+    </section>
+
+    <div class="layout">
+      <aside class="sidebar-column">
+        <section class="card side-panel calendar-panel">
+          <div class="top-meta">
+            <h2 style="margin:0;">Calendar</h2>
+            <span class="tiny-badge">Date-wise save</span>
+          </div>
+          <div class="calendar-header">
+            <button id="prevMonth">‹</button>
+            <div class="month-label" id="monthLabel"></div>
+            <button id="nextMonth">›</button>
+          </div>
+          <div class="weekday-row">
+            <div class="weekday">Sun</div>
+            <div class="weekday">Mon</div>
+            <div class="weekday">Tue</div>
+            <div class="weekday">Wed</div>
+            <div class="weekday">Thu</div>
+            <div class="weekday">Fri</div>
+            <div class="weekday">Sat</div>
+          </div>
+          <div class="days-grid" id="daysGrid"></div>
+          <div class="mini-note">
+            Green dot unte aa date ki data save ayyindhi. Selected date open chesi update cheyochu.
+          </div>
+        </section>
+
+        <section class="card side-panel water-panel">
+          <div class="section-head" style="margin-bottom:8px;">
+            <h3 style="margin:0;">Water Tracker 💧</h3>
+            <span class="spark" id="waterStat">0/8</span>
+          </div>
+          <div class="mini-note" style="margin-bottom:10px;">8 glasses target. Tap cups to mark done.</div>
+          <div class="water-grid" id="waterGrid"></div>
+        </section>
+
+        <section class="card side-panel care-panel">
+          <div class="section-head" style="margin-bottom:8px;">
+            <h3 style="margin:0;">Skin Care & Self Care 🌷</h3>
+            <span class="tiny-badge" id="careCountTag">0/0</span>
+          </div>
+          <div class="care-list" id="careList"></div>
+          <button class="add-btn" id="addCareBtn" style="margin-top:10px;">+ Add Self Care Item</button>
+          <div class="mini-note">Skin care, hair care, walk, oil, mask — anni nuvve edit chesukovachu.</div>
+        </section>
+
+        <section class="card side-panel focus-panel">
+          <h3 style="margin:0 0 10px;">Today Focus 🎯</h3>
+          <div class="focus-box" id="focusText">Complete one important task first, drink water, and end the day with a small diary note.</div>
+        </section>
+      </aside>
+
+      <main>
+        <section class="stats-grid">
+          <div class="stat">
+            <small>Study completed</small>
+            <div class="value" id="studyStat">0/0</div>
+            <div class="mini-note" style="color:rgba(255,255,255,0.9)">Time table lo entha complete chesavo.</div>
+          </div>
+          <div class="stat">
+            <small>Food score</small>
+            <div class="value" id="foodStat">0/5</div>
+            <div class="mini-note" style="color:rgba(255,255,255,0.9)">Healthy choices / junk control.</div>
+          </div>
+          <div class="stat">
+            <small>Mood</small>
+            <div class="value" id="moodStat">🙂</div>
+            <div class="mini-note" style="color:rgba(255,255,255,0.9)">Mee roju feeling.</div>
+          </div>
+          <div class="stat">
+            <small>Overall performance</small>
+            <div class="value" id="overallStat">0%</div>
+            <div class="progress-bar"><div class="progress-fill" id="overallFill"></div></div>
+          </div>
+        </section>
+
+        <section class="main-grid">
+          <div class="card">
+            <div class="section-head">
+              <h3>Study Schedule / Daily Plan ⏰</h3>
+              <span class="tiny-badge" id="studyCountTag">0/0 done</span>
+            </div>
+            <div id="studyList" class="check-list"></div>
+            <button class="add-btn" id="addStudyBtn">+ Add Study / Activity</button>
+          </div>
+
+          <div class="card">
+            <div class="section-head">
+              <h3>Food Tracker 🍱</h3>
+              <span class="tiny-badge" id="foodCountTag">0/0</span>
+            </div>
+            <div class="check-list" id="foodHabits"></div>
+            <button class="add-btn" id="addFoodBtn">+ Add Food Goal</button>
+            <div class="score-line">
+              <span>Food follow score</span>
+              <span id="foodScoreText">0 / 0</span>
+            </div>
+            <div class="mini-note">Mee own food items nuvve add cheyachu. Example: junk avoid, fruits, water, salad, timely meals.</div>
+          </div>
+
+          <div class="card">
+            <div class="section-head">
+              <h3>Mood Tracker 💗</h3>
+              <span class="tiny-badge">Pick one</span>
+            </div>
+            <div class="mood-grid" id="moodGrid"></div>
+            <div class="mini-note" id="moodNote">Select your mood for this day.</div>
+          </div>
+
+          <div class="card">
+            <div class="section-head">
+              <h3>Today Reflection 📝</h3>
+              <span class="tiny-badge">Diary</span>
+            </div>
+            <textarea id="diaryText" placeholder="Today ela iyindhi? Em nerchukunnav? Em feel ayyav? Emi bagundhi? Emi improve cheyali?"></textarea>
+          </div>
+
+          <div class="card">
+            <div class="section-head">
+              <h3>Tomorrow Plan 🌤️</h3>
+              <span class="tiny-badge">Next day</span>
+            </div>
+            <textarea id="tomorrowText" placeholder="Repu em cheyali? Study topics, food goals, important works, self-care plans raayu."></textarea>
+          </div>
+
+          <div class="card">
+            <div class="section-head">
+              <h3>Daily Performance Summary 📊</h3>
+              <span class="tiny-badge" id="summaryBadge">Keep going</span>
+            </div>
+            <textarea id="summaryText" placeholder="Automatic summary generate avuthundi. Meeru kavali ante edit chesukovachu."></textarea>
+            <div class="mini-note">Save chesthe ee summary kuda aa date ki store avuthundi.</div>
+          </div>
+        </section>
+
+        <div class="footer-actions">
+          <button class="btn btn-ghost" id="autoFillBtn">Generate Summary</button>
+          <button class="btn btn-ghost" id="resetDateBtn">Reset This Date</button>
+          <button class="btn btn-save" id="saveBtn">Save This Day</button>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">Saved successfully</div>
+
+  <script>
+    const STORAGE_KEY = "dailyMagicTrackerData_v1";
+
+    const defaultFoodHabits = [];
+
+    const defaultCareHabits = [
+      { id: makeId(), label: "Skin care", checked: false },
+      { id: makeId(), label: "Hair care", checked: false },
+      { id: makeId(), label: "Walk / movement", checked: false }
+    ];
+
+    const defaultStudyItems = [
+      { id: makeId(), text: "Wake up and fresh up", time: "06:30 AM", done: false },
+      { id: makeId(), text: "Morning study session", time: "07:00 AM", done: false },
+      { id: makeId(), text: "Important task / class work", time: "10:00 AM", done: false },
+      { id: makeId(), text: "Evening revision", time: "06:00 PM", done: false },
+      { id: makeId(), text: "Night reflection and next day plan", time: "09:30 PM", done: false }
+    ];
+
+    const moods = [
+      { value: "Amazing", emoji: "🤩", note: "Super productive and happy day!" },
+      { value: "Good", emoji: "😊", note: "Good day. Keep the flow going." },
+      { value: "Okay", emoji: "🙂", note: "Normal day. Small progress is still progress." },
+      { value: "Low", emoji: "😔", note: "Low day. Rest, reset, and start again." },
+      { value: "Tired", emoji: "😴", note: "Body or mind tired. Sleep and self-care matter." }
+    ];
+
+    const quotes = [
+      "Small steps every day create a big change in your life.",
+      "You do not need a perfect day. You need a real start.",
+      "One checked box today is better than ten plans tomorrow.",
+      "Your future is built from what you repeat daily.",
+      "Discipline starts with one promise kept to yourself.",
+      "Even a slow day counts when you do not quit.",
+      "Today is another chance to become stronger than yesterday."
+    ];
+
+    let appData = loadAppData();
+    let selectedDate = formatDateKey(new Date());
+    let currentMonth = new Date();
+    currentMonth.setDate(1);
+
+    const monthLabel = document.getElementById("monthLabel");
+    const daysGrid = document.getElementById("daysGrid");
+    const selectedDateLabel = document.getElementById("selectedDateLabel");
+    const studyList = document.getElementById("studyList");
+    const foodHabitsWrap = document.getElementById("foodHabits");
+    const moodGrid = document.getElementById("moodGrid");
+    const moodNote = document.getElementById("moodNote");
+    const diaryText = document.getElementById("diaryText");
+    const waterGrid = document.getElementById("waterGrid");
+    const careList = document.getElementById("careList");
+    const tomorrowText = document.getElementById("tomorrowText");
+    const summaryText = document.getElementById("summaryText");
+    const toast = document.getElementById("toast");
+
+    function makeId() {
+      return "id-" + Math.random().toString(36).slice(2, 10);
+    }
+
+    function formatDateKey(date) {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, "0");
+      const d = String(date.getDate()).padStart(2, "0");
+      return `${y}-${m}-${d}`;
+    }
+
+    function prettyDate(dateKey) {
+      const [y, m, d] = dateKey.split("-");
+      return `${d}/${m}/${y}`;
+    }
+
+    function format12HourTime(value) {
+      const raw = String(value || "").trim().toUpperCase();
+      if (!raw) return "";
+
+      let match = raw.match(/^(\d{1,2})(?::?(\d{2}))?\s*(AM|PM)?$/);
+      if (!match) return raw;
+
+      let hour = parseInt(match[1], 10);
+      let minute = parseInt(match[2] || "00", 10);
+      let period = match[3];
+
+      if (minute > 59) minute = 59;
+
+      if (period) {
+        if (hour < 1) hour = 1;
+        if (hour > 12) hour = ((hour - 1) % 12) + 1;
+      } else {
+        if (hour >= 0 && hour <= 23) {
+          period = hour >= 12 ? "PM" : "AM";
+          hour = hour % 12 || 12;
+        } else {
+          return raw;
+        }
+      }
+
+      return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")} ${period}`;
+    }
+
+    function loadAppData() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        return raw ? JSON.parse(raw) : {};
+      } catch (e) {
+        return {};
+      }
+    }
+
+    function saveAppData() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+    }
+
+    function getDefaultDayData() {
+      return {
+        studyItems: JSON.parse(JSON.stringify(defaultStudyItems)),
+        foodHabits: defaultFoodHabits.map(h => ({ ...h, checked: false })),
+        waterCount: 0,
+        careHabits: defaultCareHabits.map(h => ({ ...h })),
+        mood: "",
+        diary: "",
+        tomorrow: "",
+        summary: ""
+      };
+    }
+
+    function getCurrentDayData() {
+      if (!appData[selectedDate]) appData[selectedDate] = getDefaultDayData();
+      return appData[selectedDate];
+    }
+
+    function renderCalendar() {
+      const year = currentMonth.getFullYear();
+      const month = currentMonth.getMonth();
+      monthLabel.textContent = currentMonth.toLocaleString("en-US", { month: "long", year: "numeric" });
+      daysGrid.innerHTML = "";
+
+      const firstDay = new Date(year, month, 1);
+      const startDay = firstDay.getDay();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      const daysInPrevMonth = new Date(year, month, 0).getDate();
+      const todayKey = formatDateKey(new Date());
+
+      for (let i = 0; i < startDay; i++) {
+        const dayNum = daysInPrevMonth - startDay + i + 1;
+        const btn = dayButton(dayNum, true, new Date(year, month - 1, dayNum));
+        daysGrid.appendChild(btn);
+      }
+
+      for (let d = 1; d <= daysInMonth; d++) {
+        const btn = dayButton(d, false, new Date(year, month, d));
+        const key = formatDateKey(new Date(year, month, d));
+        if (key === todayKey) btn.classList.add("today");
+        daysGrid.appendChild(btn);
+      }
+
+      const totalCells = daysGrid.children.length;
+      const nextCells = 42 - totalCells;
+      for (let d = 1; d <= nextCells; d++) {
+        const btn = dayButton(d, true, new Date(year, month + 1, d));
+        daysGrid.appendChild(btn);
+      }
+    }
+
+    function dayButton(label, inactive, dateObj) {
+      const btn = document.createElement("button");
+      btn.className = "day" + (inactive ? " inactive" : "");
+      const key = formatDateKey(dateObj);
+      btn.textContent = label;
+      if (key === selectedDate) btn.classList.add("selected");
+      if (appData[key] && hasMeaningfulData(appData[key])) btn.classList.add("has-data");
+      btn.addEventListener("click", () => {
+        selectedDate = key;
+        currentMonth = new Date(dateObj.getFullYear(), dateObj.getMonth(), 1);
+        renderAll();
+      });
+      return btn;
+    }
+
+    function hasMeaningfulData(day) {
+      return (
+        day.diary?.trim() ||
+        day.tomorrow?.trim() ||
+        day.summary?.trim() ||
+        day.mood ||
+        day.studyItems?.some(i => i.text.trim() || i.done) ||
+        day.foodHabits?.some(i => i.checked) ||
+        (day.waterCount || 0) > 0 ||
+        day.careHabits?.some(i => i.checked)
+      );
+    }
+
+    function renderStudyItems() {
+      const day = getCurrentDayData();
+      studyList.innerHTML = "";
+
+      day.studyItems.forEach((item) => {
+        const row = document.createElement("div");
+        row.className = "item-row";
+        row.innerHTML = `
+          <input type="checkbox" ${item.done ? "checked" : ""} aria-label="done" />
+          <div class="time-wrap"><input type="text" value="${escapeHtmlAttr(item.time || "")}" placeholder="07:00 AM" /></div>
+          <input type="text" value="${escapeHtmlAttr(item.text)}" placeholder="Activity or study task" />
+          <div class="remove-wrap"><button class="icon-btn">✕</button></div>
+        `;
+
+        const [check, timeInput, textInput, removeBtn] = [
+          row.querySelector('input[type="checkbox"]'),
+          row.querySelector('.time-wrap input'),
+          row.querySelectorAll('input[type="text"]')[1],
+          row.querySelector('button')
+        ];
+
+        check.addEventListener("change", () => {
+          item.done = check.checked;
+          afterChange();
+        });
+
+        timeInput.addEventListener("blur", () => {
+          item.time = format12HourTime(timeInput.value);
+          timeInput.value = item.time;
+          afterChange(false);
+        });
+
+        timeInput.addEventListener("input", () => {
+          item.time = timeInput.value.toUpperCase();
+          afterChange(false);
+        });
+
+        textInput.addEventListener("input", () => {
+          item.text = textInput.value;
+          afterChange(false);
+        });
+
+        removeBtn.addEventListener("click", () => {
+          day.studyItems = day.studyItems.filter(s => s.id !== item.id);
+          renderAll();
+        });
+
+        studyList.appendChild(row);
+      });
+
+      const done = day.studyItems.filter(i => i.done).length;
+      document.getElementById("studyCountTag").textContent = `${done}/${day.studyItems.length} done`;
+      document.getElementById("studyStat").textContent = `${done}/${day.studyItems.length}`;
+    }
+
+    function renderFoodHabits() {
+      const day = getCurrentDayData();
+      if (!day.foodHabits) day.foodHabits = [];
+
+      foodHabitsWrap.innerHTML = "";
+      day.foodHabits.forEach((habit) => {
+        const row = document.createElement("div");
+        row.className = "item-row";
+        row.innerHTML = `
+          <input type="checkbox" ${habit.checked ? "checked" : ""} aria-label="done" />
+          <div class="time-wrap"></div>
+          <input type="text" value="${escapeHtmlAttr(habit.label)}" placeholder="Food goal" />
+          <div class="remove-wrap"><button class="icon-btn">✕</button></div>
+        `;
+
+        const checkbox = row.querySelector('input[type="checkbox"]');
+        const textInput = row.querySelector('input[type="text"]');
+        const removeBtn = row.querySelector('button');
+
+        checkbox.addEventListener("change", () => {
+          habit.checked = checkbox.checked;
+          afterChange();
+        });
+
+        textInput.addEventListener("input", () => {
+          habit.label = textInput.value;
+          afterChange(false);
+        });
+
+        removeBtn.addEventListener("click", () => {
+          day.foodHabits = day.foodHabits.filter(h => h.id !== habit.id);
+          renderAll();
+        });
+
+        foodHabitsWrap.appendChild(row);
+      });
+
+      const foodDone = day.foodHabits.filter(h => h.checked).length;
+      const foodTotal = day.foodHabits.length;
+      document.getElementById("foodCountTag").textContent = `${foodDone}/${foodTotal}`;
+      document.getElementById("foodScoreText").textContent = `${foodDone} / ${foodTotal}`;
+      document.getElementById("foodStat").textContent = `${foodDone}/${foodTotal}`;
+    }
+
+    function renderWaterTracker() {
+      const day = getCurrentDayData();
+      if (typeof day.waterCount !== "number") day.waterCount = 0;
+      waterGrid.innerHTML = "";
+      for (let i = 1; i <= 8; i++) {
+        const btn = document.createElement("button");
+        btn.className = "water-cup" + (i <= day.waterCount ? " active" : "");
+        btn.textContent = `${i}`;
+        btn.addEventListener("click", () => {
+          day.waterCount = i === day.waterCount ? i - 1 : i;
+          afterChange();
+        });
+        waterGrid.appendChild(btn);
+      }
+      document.getElementById("waterStat").textContent = `${day.waterCount}/8`;
+    }
+
+    function renderCareHabits() {
+      const day = getCurrentDayData();
+      if (!day.careHabits || day.careHabits.length === 0) {
+        day.careHabits = defaultCareHabits.map(h => ({ ...h }));
+      }
+      careList.innerHTML = "";
+      day.careHabits.forEach((habit) => {
+        const row = document.createElement("div");
+        row.className = "item-row";
+        row.innerHTML = `
+          <input type="checkbox" ${habit.checked ? "checked" : ""} aria-label="done" />
+          <div class="time-wrap"></div>
+          <input type="text" value="${escapeHtmlAttr(habit.label)}" placeholder="Self care item" />
+          <div class="remove-wrap"><button class="icon-btn">✕</button></div>
+        `;
+
+        const checkbox = row.querySelector('input[type="checkbox"]');
+        const textInput = row.querySelector('input[type="text"]');
+        const removeBtn = row.querySelector('button');
+
+        checkbox.addEventListener("change", () => {
+          habit.checked = checkbox.checked;
+          afterChange();
+        });
+
+        textInput.addEventListener("input", () => {
+          habit.label = textInput.value;
+          afterChange(false);
+        });
+
+        removeBtn.addEventListener("click", () => {
+          day.careHabits = day.careHabits.filter(h => h.id !== habit.id);
+          renderAll();
+        });
+
+        careList.appendChild(row);
+      });
+
+      const careDone = day.careHabits.filter(h => h.checked).length;
+      document.getElementById("careCountTag").textContent = `${careDone}/${day.careHabits.length}`;
+    }
+
+    function renderMood() {
+      const day = getCurrentDayData();
+      moodGrid.innerHTML = "";
+      moods.forEach(mood => {
+        const btn = document.createElement("button");
+        btn.className = "mood-btn" + (day.mood === mood.value ? " selected" : "");
+        btn.innerHTML = `<span class="emoji">${mood.emoji}</span><span>${mood.value}</span>`;
+        btn.addEventListener("click", () => {
+          day.mood = mood.value;
+          moodNote.textContent = mood.note;
+          afterChange();
+        });
+        moodGrid.appendChild(btn);
+      });
+
+      const selected = moods.find(m => m.value === day.mood);
+      document.getElementById("moodStat").textContent = selected ? selected.emoji : "🙂";
+      moodNote.textContent = selected ? selected.note : "Select your mood for this day.";
+    }
+
+    function renderTexts() {
+      const day = getCurrentDayData();
+      diaryText.value = day.diary || "";
+      tomorrowText.value = day.tomorrow || "";
+      summaryText.value = day.summary || "";
+
+      diaryText.oninput = () => { day.diary = diaryText.value; afterChange(false); };
+      tomorrowText.oninput = () => { day.tomorrow = tomorrowText.value; afterChange(false); };
+      summaryText.oninput = () => { day.summary = summaryText.value; afterChange(false); updateSummaryBadge(); };
+    }
+
+    function computeOverall() {
+      const day = getCurrentDayData();
+      const studyTotal = day.studyItems.length || 1;
+      const studyDone = day.studyItems.filter(i => i.done).length;
+      const studyScore = (studyDone / studyTotal) * 50;
+      const foodDone = day.foodHabits.filter(h => h.checked).length;
+      const foodTotal = day.foodHabits.length || 1;
+      const foodScore = (foodDone / foodTotal) * 30;
+      const moodBonusMap = { Amazing: 20, Good: 16, Okay: 12, Low: 8, Tired: 6 };
+      const moodScore = moodBonusMap[day.mood] || 8;
+      const total = Math.round(studyScore + foodScore + moodScore);
+      return { total, studyDone, studyTotal, foodDone };
+    }
+
+    function updateStats() {
+      const { total } = computeOverall();
+      document.getElementById("overallStat").textContent = `${total}%`;
+      document.getElementById("overallFill").style.width = `${Math.min(total,100)}%`;
+      updateSummaryBadge(total);
+      renderSidebarInsights();
+    }
+
+    function updateSummaryBadge(score = computeOverall().total) {
+      const badge = document.getElementById("summaryBadge");
+      if (score >= 85) badge.textContent = "Excellent day";
+      else if (score >= 65) badge.textContent = "Good progress";
+      else if (score >= 40) badge.textContent = "Keep improving";
+      else badge.textContent = "Fresh start needed";
+    }
+
+
+    function renderSidebarInsights() {
+      const day = getCurrentDayData();
+      const { studyDone, studyTotal, foodDone } = computeOverall();
+      const studyPercent = Math.round((studyDone / (studyTotal || 1)) * 100);
+
+      let focus = "Complete one important task first, drink water, and end the day with a small diary note.";
+      if (studyPercent < 40) focus = "Start with just one study task now. Small action first, motivation later.";
+      else if (foodDone < Math.max(1, Math.ceil((day.foodHabits.length || 1) / 2))) focus = "Food discipline konchem improve chey. Nee own food goals lo inkonni complete chey.";
+      else if ((day.waterCount || 0) < 5) focus = "Water konchem penchu. Ee roju target 8 glasses complete cheyadaniki try chey.";
+      else if (!day.mood) focus = "Mee feeling ni track chey. Mood choose chesthe day pattern easy ga ardham avuthundi.";
+      else if ((day.diary || "").trim().length < 20) focus = "Today gurinchi 2-3 lines rayu. Diary valla progress clear ga kanipisthundi.";
+      else if (studyPercent >= 80 && foodDone >= Math.max(1, day.foodHabits.length - 1)) focus = "Chaala bagundi. Ippudu repati plan ni clear ga rayi so momentum continue avuthundi.";
+      document.getElementById("focusText").textContent = focus;
+    }
+
+    function generateSummary() {
+      const day = getCurrentDayData();
+      const { total, studyDone, studyTotal, foodDone } = computeOverall();
+      const moodText = day.mood || "No mood selected";
+      const foodTotal = day.foodHabits.length;
+      let line = `On ${prettyDate(selectedDate)}, I completed ${studyDone} out of ${studyTotal} planned activities, followed ${foodDone} out of ${foodTotal} food goals, drank ${day.waterCount || 0} glasses of water, and my mood was ${moodText}. Overall performance for the day was ${total}%. `;
+
+      if (total >= 85) line += "This was a very strong day. Keep the same consistency tomorrow.";
+      else if (total >= 65) line += "This was a good day with nice progress. A little more consistency can make it even better.";
+      else if (total >= 40) line += "This day was average. Try to complete more planned tasks and improve food discipline tomorrow.";
+      else line += "This day was low, but that is okay. Reset gently and plan a simpler, easier tomorrow.";
+
+      day.summary = line;
+      summaryText.value = line;
+      updateSummaryBadge(total);
+    }
+
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.add("show");
+      clearTimeout(showToast.timer);
+      showToast.timer = setTimeout(() => toast.classList.remove("show"), 1800);
+    }
+
+    function afterChange(refreshAll = true) {
+      saveAppData();
+      if (refreshAll) renderAll();
+      else {
+        updateStats();
+        renderCalendar();
+      }
+    }
+
+    function escapeHtmlAttr(value) {
+      return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/"/g, "&quot;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+    }
+
+    function renderAll() {
+      selectedDateLabel.textContent = prettyDate(selectedDate);
+      renderCalendar();
+      renderStudyItems();
+      renderFoodHabits();
+      renderWaterTracker();
+      renderCareHabits();
+      renderMood();
+      renderTexts();
+      updateStats();
+    }
+
+    function setMotivation() {
+      const random = quotes[Math.floor(Math.random() * quotes.length)];
+      document.getElementById("motivationText").textContent = random;
+    }
+
+    document.getElementById("prevMonth").addEventListener("click", () => {
+      currentMonth.setMonth(currentMonth.getMonth() - 1);
+      renderCalendar();
+    });
+
+    document.getElementById("nextMonth").addEventListener("click", () => {
+      currentMonth.setMonth(currentMonth.getMonth() + 1);
+      renderCalendar();
+    });
+
+    document.getElementById("todayBtn").addEventListener("click", () => {
+      selectedDate = formatDateKey(new Date());
+      currentMonth = new Date();
+      currentMonth.setDate(1);
+      renderAll();
+      showToast("Opened today");
+    });
+
+    document.getElementById("quoteBtn").addEventListener("click", setMotivation);
+
+    document.getElementById("addStudyBtn").addEventListener("click", () => {
+      const day = getCurrentDayData();
+      day.studyItems.push({ id: makeId(), text: "New task", time: "07:00 PM", done: false });
+      renderAll();
+    });
+
+    document.getElementById("addFoodBtn").addEventListener("click", () => {
+      const day = getCurrentDayData();
+      day.foodHabits.push({ id: makeId(), label: "New food goal", checked: false });
+      renderAll();
+    });
+
+    document.getElementById("addCareBtn").addEventListener("click", () => {
+      const day = getCurrentDayData();
+      if (!day.careHabits) day.careHabits = [];
+      day.careHabits.push({ id: makeId(), label: "New self care item", checked: false });
+      renderAll();
+    });
+
+    document.getElementById("autoFillBtn").addEventListener("click", () => {
+      generateSummary();
+      saveAppData();
+      showToast("Summary generated");
+    });
+
+    document.getElementById("saveBtn").addEventListener("click", () => {
+      if (!summaryText.value.trim()) generateSummary();
+      saveAppData();
+      renderCalendar();
+      showToast(`Saved ${prettyDate(selectedDate)}`);
+    });
+
+    document.getElementById("resetDateBtn").addEventListener("click", () => {
+      appData[selectedDate] = getDefaultDayData();
+      saveAppData();
+      renderAll();
+      showToast(`Reset ${prettyDate(selectedDate)}`);
+    });
+
+    function createFloatingBubbles() {
+      const wrap = document.getElementById("floating");
+      for (let i = 0; i < 16; i++) {
+        const bubble = document.createElement("div");
+        bubble.className = "bubble";
+        const size = Math.random() * 60 + 20;
+        bubble.style.width = size + "px";
+        bubble.style.height = size + "px";
+        bubble.style.left = Math.random() * 100 + "%";
+        bubble.style.bottom = -(Math.random() * 150) + "px";
+        bubble.style.animationDelay = (Math.random() * 10) + "s";
+        bubble.style.animationDuration = (10 + Math.random() * 8) + "s";
+        bubble.style.background = Math.random() > 0.5 ? "#ec4899" : "#8b5cf6";
+        wrap.appendChild(bubble);
+      }
+    }
+
+    createFloatingBubbles();
+    setMotivation();
+    renderAll();
+  </script>
+</body>
+</html>
